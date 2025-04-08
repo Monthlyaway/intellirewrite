@@ -155,12 +155,8 @@ def process_tasks():
             # Write the markdown output
             with open(output_path, 'w', encoding='utf-8') as f:
                 for qa in task.qa_pairs:
-                    f.write(f"## Original Text (Chunk {qa.chunk_index + 1})\n\n")
-                    f.write(qa.question)
-                    f.write("\n\n")
-                    f.write("## Rewritten Version\n\n")
                     f.write(qa.answer)
-                    f.write("\n\n---\n\n")
+                    f.write("\n\n")
 
             queue_manager.update_task_status(task.id, TaskStatus.COMPLETED)
             console.print(f"[green]Task {task.id} completed successfully![/green]")
