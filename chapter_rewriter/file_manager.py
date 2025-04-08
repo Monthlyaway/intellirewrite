@@ -52,6 +52,11 @@ class FileManager:
         task_dir = self.base_dir / task_id
         return str(task_dir / "qa_pairs.json")
     
+    def get_task_json_path(self, task_id: str) -> str:
+        """Get the path for the task configuration JSON file."""
+        task_dir = self.base_dir / task_id
+        return str(task_dir / "task.json")
+    
     def get_task_directory(self, task_id: str) -> Optional[Path]:
         """Get the directory for a task if it exists."""
         task_dir = self.base_dir / task_id
@@ -73,7 +78,8 @@ class FileManager:
         
         return {
             "task_id": task_id,
-            "input_files": [f.name for f in input_files if f.name != "chunks.json" and f.name != "qa_pairs.json"],
+            "input_files": [f.name for f in input_files if f.name != "chunks.json" and f.name != "qa_pairs.json" and f.name != "task.json"],
             "has_chunks": (task_dir / "chunks.json").exists(),
-            "has_qa_pairs": (task_dir / "qa_pairs.json").exists()
+            "has_qa_pairs": (task_dir / "qa_pairs.json").exists(),
+            "has_task_json": (task_dir / "task.json").exists()
         } 

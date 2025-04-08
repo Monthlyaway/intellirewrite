@@ -12,6 +12,7 @@ class TaskStatus(str, Enum):
 class QAPair(BaseModel):
     question: str
     answer: str
+    reasoning_content: Optional[str] = None
     chunk_index: int
     char_count: int
 
@@ -27,6 +28,8 @@ class RewriteTask(BaseModel):
     qa_pairs: List[QAPair] = []
     total_chunks: int = 0
     processed_chunks: int = 0
+    chunk_size: int = 500  # Default chunk size
+    memory_size: int = 0   # Default memory size (0 = no memory)
     mock_response: str = """
 # Rewritten Chapter
 

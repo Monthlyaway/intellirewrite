@@ -1,7 +1,7 @@
 import json
 import uuid
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .models import RewriteTask, TaskStatus
 from .file_manager import FileManager
@@ -33,8 +33,22 @@ class QueueManager:
     def _save_tasks(self):
         with open(self.queue_file, 'w') as f:
             json.dump([task.model_dump() for task in self.tasks], f, indent=2, cls=DateTimeEncoder)
+            
+    def _save_task_config(self, task_id: str, config: Dict[str, Any]):
+        """Save task-specific configuration to task.json."""
+        task_json_path = self.file_manager.get_task_json_path(task_id)
+        with open(task_json_path, 'w') as f:
+            json.dump(config, f, indent=2, cls=DateTimeEncoder)
+            
+    def _load_task_config(self, task_id: str) -> Dict[str, Any]:
+        """Load task-specific configuration from task.json."""
+        task_json_path = self.file_manager.get_task_json_path(task_id)
+        if Path(task_json_path).exists():
+            with open(task_json_path, 'r') as f:
+                return json.load(f)
+        return {}
 
-    def add_task(self, input_file: str, output_file: str) -> RewriteTask:
+    def add_task(self, input_file: str, output_file: str, chunk_size: int = 500, memory_size: int = 0) -> RewriteTask:
         # Create a directory structure for this task
         task_id, input_file_path, input_file_name = self.file_manager.create_task_directory(input_file)
         
@@ -45,8 +59,17 @@ class QueueManager:
             id=str(uuid.uuid4()),
             task_id=task_id,
             input_file=input_file_path,
-            output_file=output_file_path
+            output_file=output_file_path,
+            chunk_size=chunk_size,
+            memory_size=memory_size
         )
+        
+        # Save task-specific configuration
+        self._save_task_config(task_id, {
+            "chunk_size": chunk_size,
+            "memory_size": memory_size
+        })
+        
         self.tasks.append(task)
         self._save_tasks()
         return task
