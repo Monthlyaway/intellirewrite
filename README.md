@@ -26,6 +26,15 @@ IntelliRewrite is a powerful command-line tool that helps students, researchers,
 - **Progress Tracking**: Real-time progress updates with detailed information
 - **Resumable Processing**: Continue interrupted tasks without losing progress
 
+## 🎓 Perfect for Students
+
+IntelliRewrite is designed with students in mind:
+
+- **Study Notes**: Rewrite your notes for better clarity and understanding
+- **Essay Improvement**: Enhance your writing without changing the meaning
+- **Research Papers**: Process and improve large academic documents
+- **Language Learning**: See how AI rewrites text to improve your language skills
+
 ## 🌍 Global Accessibility
 
 IntelliRewrite is designed to work worldwide:
@@ -39,10 +48,39 @@ IntelliRewrite is designed to work worldwide:
 - **Markdown**: `.md`
 - **Text**: `.txt`
 
-❌ **PDF**:  `.pdf` (not supported) use [MinerU](https://github.com/opendatalab/MinerU) to extract text from PDF
+❌ **PDF**:  `.pdf` (not supported) use [MinerU](https://github.com/opendatalab/MinerU) to extract markdown from PDF
 
 
 ## 🔄 Workflow Overview
+
+## 🎭 Real-World Example
+
+Imagine this: Your Linear Algebra professor assigns Chapter 3 & 4 on "Eigenvalues and Eigenvectors" - you know, that chapter where suddenly matrices start having "personalities" and vectors get "special treatment."
+
+You: *stares at textbook* "Wait, how did they jump from step 2 to step 7? Did I miss four pages?"
+
+**Enter IntelliRewrite workflow:**
+
+1. **Extract & Convert**  
+   Convert that dense PDF to markdown using [MinerU](https://github.com/opendatalab/MinerU)
+
+2. **Queue It Up**  
+   ```bash
+   python -m chapter_rewriter.cli add-task linear_algebra_ch3.md --chunk-size 800
+    python -m chapter_rewriter.cli add-task linear_algebra_ch4.md --chunk-size 800
+
+   ```
+
+3. **Let AI Work Overnight**  
+   ```bash
+   python -m chapter_rewriter.cli process-tasks
+   ```
+
+4. **Next Morning**  
+   Open `output/linear_algebra_ch3_rewritten.md` and  `output/linear_algebra_ch4_rewritten.md` and find a beautifully explained version that actually shows those missing steps and explains why eigenvalues matter in the real world!
+
+   No more "it can be trivially shown that..." when there's nothing trivial about it!
+
 
 ### Standard Processing Flow
 1. **Add Tasks**  
@@ -74,7 +112,6 @@ IntelliRewrite is designed to work worldwide:
    ```
    Processing document1.md [■■■■□□□□□□] 40%
    Current chunk: 12/30 (1024 chars)
-   Estimated remaining: 8m 23s
    ```
 
 Output files are in folder `output`
@@ -89,7 +126,11 @@ Output files are in folder `output`
 
 ## 🔧 Chunk Size Configuration
 
-**Default:** 800 characters (including spaces)
+Adjust how documents are split into manageable pieces for processing. Long documents are automatically chunked into smaller sections to optimize LLM processing. The `--chunk-size` parameter controls the approximate number of characters per chunk (not tokens), allowing you to fine-tune processing based on document complexity and language characteristics.
+
+
+
+**Default:** 800 characters
 
 ### Why Character Count?
 We use character-based chunking to ensure fair calculation across languages:
@@ -147,8 +188,8 @@ cp .env.example .env
 Edit the `.env` file with your API key and preferred settings:
 
 ```
-DEEPSEEK_API_KEY=your_api_key_here
-DEEPSEEK_BASE_URL=https://api.deepseek.com  # Change to https://api.siliconflow.cn/v1 if needed
+API_KEY=your_api_key_here
+BASE_URL=https://api.deepseek.com  # Change to https://api.siliconflow.cn/v1 if needed
 ```
 
 ## 📖 Usage
@@ -186,21 +227,23 @@ python -m chapter_rewriter.cli list-tasks --help
 python -m chapter_rewriter.cli show-task --help
 ```
 
-## 🎓 Perfect for Students
+### Cleaning 
 
-IntelliRewrite is designed with students in mind:
+```bash
+./clean.bat  # Windows User
+./clean.sh  # Linux User
+```
 
-- **Study Notes**: Rewrite your notes for better clarity and understanding
-- **Essay Improvement**: Enhance your writing without changing the meaning
-- **Research Papers**: Process and improve large academic documents
-- **Language Learning**: See how AI rewrites text to improve your language skills
+
+
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-- `DEEPSEEK_API_KEY`: Your API key
-- `DEEPSEEK_BASE_URL`: API base URL (change for regional access)
+- `API_KEY`: Your API key
+- `BASE_URL`: API base URL (change for regional access)
+- `MAX_TOKENS`: Restrict the length of model's response, default: 4096
 
 ### Task-Specific Settings
 

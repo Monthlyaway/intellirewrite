@@ -9,12 +9,12 @@ load_dotenv()
 class DeepSeekAPI:
     def __init__(self):
         """Initialize the DeepSeek API client."""
-        api_key = os.getenv("DEEPSEEK_API_KEY")
-        base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+        api_key = os.getenv("API_KEY")
+        base_url = os.getenv("BASE_URL", "https://api.deepseek.com/v1")
         self.max_tokens = int(os.getenv("MAX_TOKENS", "4096"))
         
         if not api_key:
-            raise ValueError("DEEPSEEK_API_KEY environment variable is not set")
+            raise ValueError("API_KEY environment variable is not set")
         
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = "deepseek-ai/DeepSeek-V2.5"

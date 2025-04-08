@@ -1,5 +1,5 @@
 @echo off
-echo Cleaning chapter rewriter data...
+echo Cleaning rewriter data..., make sure the OUTPUT_DIR is `output`, or you need to manually modify this clearning script
 
 REM Check if tasks.json exists and delete it
 if exist tasks.json (
