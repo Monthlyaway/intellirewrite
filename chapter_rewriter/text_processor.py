@@ -9,7 +9,7 @@ class TextChunk:
     char_count: int
 
 class TextProcessor:
-    def __init__(self, chunk_size: int = 500):
+    def __init__(self, chunk_size: int = 800):
         self.chunk_size = chunk_size
 
     def split_into_chunks(self, text: str) -> List[TextChunk]:

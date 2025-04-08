@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 # Load environment variables from .env file
 load_dotenv()
@@ -11,6 +11,7 @@ class DeepSeekAPI:
         """Initialize the DeepSeek API client."""
         api_key = os.getenv("DEEPSEEK_API_KEY")
         base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
+        self.max_tokens = int(os.getenv("MAX_TOKENS", "4096"))
         
         if not api_key:
             raise ValueError("DEEPSEEK_API_KEY environment variable is not set")
@@ -18,23 +19,30 @@ class DeepSeekAPI:
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = "deepseek-ai/DeepSeek-V2.5"
     
-    def generate_response(self, prompt: str, max_tokens: int = 8192) -> Dict[str, Any]:
+    def generate_response(self, prompt: str, memory_context: str = "", max_tokens: Optional[int] = None) -> Dict[str, Any]:
         """
         Generate a response from the DeepSeek Reasoner model.
         
         Args:
             prompt: The input prompt
-            max_tokens: Maximum number of tokens for the response
+            memory_context: Optional context from previous chunks
+            max_tokens: Maximum number of tokens for the response (overrides environment variable)
             
         Returns:
             Dictionary containing the reasoning_content and content
         """
         try:
-            messages = [{"role": "user", "content": prompt}]
+            # Prepare the full prompt with memory context if provided
+            full_prompt = f"Please rewrite the following text in a clear and engaging way, maintaining the original meaning but improving the style and flow:\n\n{prompt}"
+            
+            if memory_context:
+                full_prompt = f"{memory_context}\n\n{full_prompt}"
+                
+            messages = [{"role": "user", "content": full_prompt}]
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=max_tokens
+                max_tokens=max_tokens if max_tokens is not None else self.max_tokens
             )
             
             # Extract content
@@ -55,4 +63,16 @@ class DeepSeekAPI:
             return {
                 "reasoning_content": f"Error: {str(e)}",
                 "content": "An error occurred while generating the response. Please try again later."
-            } 
+            }
+            
+    def parse_response(self, response: Dict[str, Any]) -> Tuple[str, Optional[str]]:
+        """
+        Parse the response from the API into answer and reasoning content.
+        
+        Args:
+            response: The response dictionary from generate_response
+            
+        Returns:
+            Tuple containing (answer, reasoning_content)
+        """
+        return response.get("content", ""), response.get("reasoning_content") 

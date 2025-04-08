@@ -5,9 +5,9 @@ from typing import Tuple, Optional
 import uuid
 
 class FileManager:
-    def __init__(self, base_dir: str = "chapter_data"):
+    def __init__(self, base_dir: str = None):
         """Initialize the file manager with a base directory for all data."""
-        self.base_dir = Path(base_dir)
+        self.base_dir = Path(base_dir or os.getenv("OUTPUT_DIR", "output"))
         self.base_dir.mkdir(exist_ok=True)
         
     def create_task_directory(self, input_file_path: str) -> Tuple[str, str, str]:

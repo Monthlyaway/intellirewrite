@@ -7,10 +7,10 @@ if exist tasks.json (
     del /f /q tasks.json
 )
 
-REM Check if chapter_data folder exists and delete it
-if exist chapter_data (
-    echo Deleting chapter_data folder...
-    rmdir /s /q chapter_data
+REM Check if output folder exists and delete it
+if exist output (
+    echo Deleting output folder...
+    rmdir /s /q output
 )
 
 echo Cleanup complete!

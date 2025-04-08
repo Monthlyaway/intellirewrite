@@ -20,7 +20,7 @@ api_client = None  # Initialize as None, will be created when needed
 def add_task(
     input_file: str, 
     output_file: str = None, 
-    chunk_size: int = typer.Option(500, help="Size of text chunks to process"),
+    chunk_size: int = typer.Option(800, help="Size of text chunks to process"),
     memory_size: int = typer.Option(0, help="Number of previous Q&A pairs to include in the prompt (0 for no memory)")
 ):
     """Add a new chapter rewriting task to the queue."""
@@ -115,54 +115,77 @@ def list_tasks():
 @app.command()
 def process_tasks():
     """Process all pending tasks in the queue."""
+    # Initialize API client if not already done
+    global api_client
+    if api_client is None:
+        try:
+            api_client = DeepSeekAPI()
+            console.print("[green]Successfully connected to DeepSeek API[/green]")
+        except Exception as e:
+            console.print(f"[red]Error initializing DeepSeek API: {str(e)}[/red]")
+            console.print("[yellow]Using mock responses instead[/yellow]")
+            api_client = None
+    
+    # Get pending tasks
     pending_tasks = queue_manager.get_pending_tasks()
     if not pending_tasks:
         console.print("[yellow]No pending tasks to process.[/yellow]")
         return
-
-    # Initialize the API client
-    global api_client
-    try:
-        api_client = DeepSeekAPI()
-        console.print("[green]Successfully connected to DeepSeek API[/green]")
-    except Exception as e:
-        console.print(f"[red]Error initializing DeepSeek API: {str(e)}[/red]")
-        console.print("[yellow]Using mock responses instead[/yellow]")
-        api_client = None
-
+    
+    # Check for interrupted tasks
+    interrupted_tasks = [task for task in pending_tasks if task.status == TaskStatus.PROCESSING]
+    if interrupted_tasks:
+        console.print(f"[yellow]Found {len(interrupted_tasks)} interrupted task(s). Resuming...[/yellow]")
+        for task in interrupted_tasks:
+            console.print(f"  - Task {task.id}: {Path(task.input_file).name} ({task.processed_chunks}/{task.total_chunks} chunks processed)")
+    
     for task in pending_tasks:
-        console.print(f"Processing task {task.id}...")
         try:
             # Update task status to processing
             queue_manager.update_task_status(task.id, TaskStatus.PROCESSING)
             
-            # Load task-specific configuration
-            task_config = queue_manager._load_task_config(task.task_id)
-            chunk_size = task_config.get("chunk_size", task.chunk_size)
-            memory_size = task_config.get("memory_size", task.memory_size)
-            
-            console.print(f"Using chunk size: {chunk_size}, memory size: {memory_size}")
-            
-            # Initialize text processor with the task's chunk size
-            global text_processor
-            text_processor = TextProcessor(chunk_size=chunk_size)
-            
-            # Load chunks from JSON file
+            # Get the chunks file path
             chunks_file = queue_manager.file_manager.get_chunks_file(task.task_id)
-            if not Path(chunks_file).exists():
-                raise FileNotFoundError(f"Chunks file not found: {chunks_file}")
-                
+            qa_json_path = queue_manager.file_manager.get_qa_json_path(task.task_id)
+            
+            # Load chunks
             with open(chunks_file, 'r', encoding='utf-8') as f:
                 chunks_data = json.load(f)
             
             # Load existing Q&A pairs if any
-            qa_json_path = queue_manager.file_manager.get_qa_json_path(task.task_id)
             existing_qa_pairs = []
             if Path(qa_json_path).exists():
                 with open(qa_json_path, 'r', encoding='utf-8') as f:
                     existing_qa_pairs = json.load(f)
                     # Convert to QAPair objects
                     task.qa_pairs = [QAPair(**qa) for qa in existing_qa_pairs]
+            
+            # Get the output file path
+            output_path = queue_manager.file_manager.get_output_path(task.task_id, Path(task.output_file).name)
+            
+            # Check if we're resuming a task
+            is_resuming = task.processed_chunks > 0
+            
+            # If resuming, don't clear the output file
+            if not is_resuming:
+                # Create or clear the output file
+                with open(output_path, 'w', encoding='utf-8') as f:
+                    f.write("")  # Clear the file
+            
+            # Display task information
+            console.print(f"[bold cyan]Processing Task:[/bold cyan]")
+            console.print(f"Task ID: {task.id}")
+            console.print(f"Directory ID: {task.task_id}")
+            console.print(f"Input File: {Path(task.input_file).name}")
+            console.print(f"Output File: {Path(task.output_file).name}")
+            console.print(f"Total Chunks: {len(chunks_data)}")
+            console.print(f"Processed Chunks: {task.processed_chunks}")
+            console.print(f"Memory Size: {task.memory_size}")
+            console.print(f"Output Path: {output_path}")
+            console.print(f"Q&A Path: {qa_json_path}")
+            if is_resuming:
+                console.print(f"[yellow]Resuming task from chunk {task.processed_chunks + 1}[/yellow]")
+            console.print("")
             
             with Progress(
                 SpinnerColumn(),
@@ -172,74 +195,91 @@ def process_tasks():
                 console=console
             ) as progress:
                 task_progress = progress.add_task(
-                    f"Processing {Path(task.input_file).name} (0/{len(chunks_data)})", 
-                    total=len(chunks_data)
+                    f"Processing {Path(task.input_file).name} ({task.processed_chunks}/{len(chunks_data)})", 
+                    total=len(chunks_data),
+                    completed=task.processed_chunks
                 )
                 
                 # Process each chunk
                 for i, chunk_data in enumerate(chunks_data):
-                    chunk_index = chunk_data["index"]
                     content = chunk_data["content"]
+                    chunk_index = chunk_data["index"]
                     char_count = chunk_data["char_count"]
                     
                     # Update progress description with current chunk information
                     progress.update(
                         task_progress, 
-                        description=f"Processing {Path(task.input_file).name} (Chunk {i+1}/{len(chunks_data)}, {char_count} chars)"
+                        description=f"Task {task.id} - Chunk {i+1}/{len(chunks_data)} ({char_count} chars)"
                     )
                     
-                    # Prepare prompt with memory if enabled
-                    prompt = f"Please rewrite the following text in a clear and engaging way, maintaining the original meaning but improving the style and flow:\n\n{content}"
+                    # Skip if this chunk was already processed
+                    if any(qa.chunk_index == chunk_index for qa in task.qa_pairs):
+                        progress.update(task_progress, advance=1)
+                        continue
                     
-                    # Add memory context if enabled
-                    if memory_size > 0 and task.qa_pairs:
-                        # Get the most recent Q&A pairs up to memory_size
-                        memory_qa_pairs = task.qa_pairs[-memory_size:]
-                        memory_context = "\n\nPrevious context:\n"
-                        for qa in memory_qa_pairs:
-                            memory_context += f"Previous chunk: {qa.question[:100]}...\n"
-                            memory_context += f"Rewritten as: {qa.answer[:100]}...\n\n"
-                        prompt = memory_context + prompt
+                    # Get memory context if needed
+                    memory_context = ""
+                    if task.memory_size > 0:
+                        # Get previous Q&A pairs for context
+                        start_idx = max(0, i - task.memory_size)
+                        memory_pairs = task.qa_pairs[start_idx:i]
+                        if memory_pairs:
+                            memory_context = "\n\n".join([f"Previous Q&A:\nQ: {qa.question}\nA: {qa.answer}" for qa in memory_pairs])
                     
-                    # Generate response from DeepSeek API or use mock response
-                    if api_client:
-                        response = api_client.generate_response(prompt)
-                        answer = response["content"]
-                        reasoning_content = response["reasoning_content"]
-                    else:
-                        # Use mock response if API is not available
-                        answer = task.mock_response
-                        reasoning_content = "Mock reasoning content (API not available)"
+                    try:
+                        # Generate response
+                        response = api_client.generate_response(content, memory_context)
+                        
+                        # Parse response
+                        answer, reasoning_content = api_client.parse_response(response)
+                        
+                        # Create Q&A pair
+                        qa_pair = QAPair(
+                            question=content,
+                            answer=answer,
+                            reasoning_content=reasoning_content,
+                            chunk_index=chunk_index,
+                            char_count=char_count
+                        )
+                        
+                        # Add the Q&A pair to the task
+                        task.qa_pairs.append(qa_pair)
+                        task.processed_chunks += 1
+                        
+                        # Save Q&A pairs after each chunk is processed
+                        with open(qa_json_path, 'w', encoding='utf-8') as f:
+                            json.dump([qa.model_dump() for qa in task.qa_pairs], f, ensure_ascii=False, indent=2)
+                        
+                        # Append the rewritten content to the output file in real-time
+                        with open(output_path, 'a', encoding='utf-8') as f:
+                            f.write(qa_pair.answer)
+                            f.write("\n\n")
+                    except Exception as e:
+                        console.print(f"[red]Error processing chunk {i+1}: {str(e)}[/red]")
+                        # Create a placeholder Q&A pair for this chunk
+                        qa_pair = QAPair(
+                            question=content,
+                            answer=f"[Error: {str(e)}]",
+                            reasoning_content=f"Error processing chunk: {str(e)}",
+                            chunk_index=chunk_index,
+                            char_count=char_count
+                        )
+                        task.qa_pairs.append(qa_pair)
+                        task.processed_chunks += 1
+                        
+                        # Save Q&A pairs after each chunk is processed
+                        with open(qa_json_path, 'w', encoding='utf-8') as f:
+                            json.dump([qa.model_dump() for qa in task.qa_pairs], f, ensure_ascii=False, indent=2)
+                        
+                        # Append the error message to the output file
+                        with open(output_path, 'a', encoding='utf-8') as f:
+                            f.write(f"[Error processing chunk: {str(e)}]")
+                            f.write("\n\n")
                     
-                    # Create Q&A pair
-                    qa_pair = QAPair(
-                        question=content,
-                        answer=answer,
-                        reasoning_content=reasoning_content,
-                        chunk_index=chunk_index,
-                        char_count=char_count
-                    )
-                    
-                    # Add the Q&A pair to the task
-                    task.qa_pairs.append(qa_pair)
-                    task.processed_chunks += 1
                     progress.update(task_progress, advance=1)
-                    
-                    # Save Q&A pairs after each chunk is processed
-                    with open(qa_json_path, 'w', encoding='utf-8') as f:
-                        json.dump([qa.model_dump() for qa in task.qa_pairs], f, ensure_ascii=False, indent=2)
                     
                     # Save task status
                     queue_manager._save_tasks()
-
-            # Write the final output using task_id for the output path
-            output_path = queue_manager.file_manager.get_output_path(task.task_id, Path(task.output_file).name)
-            
-            # Write the markdown output (only the rewritten content, not the reasoning)
-            with open(output_path, 'w', encoding='utf-8') as f:
-                for qa in task.qa_pairs:
-                    f.write(qa.answer)
-                    f.write("\n\n")
 
             queue_manager.update_task_status(task.id, TaskStatus.COMPLETED)
             console.print(f"[green]Task {task.id} completed successfully![/green]")

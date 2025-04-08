@@ -5,6 +5,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .models import RewriteTask, TaskStatus
 from .file_manager import FileManager
+import os
 
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -16,7 +17,7 @@ class QueueManager:
     def __init__(self, queue_file: str = "tasks.json"):
         self.queue_file = Path(queue_file)
         self.tasks: List[RewriteTask] = []
-        self.file_manager = FileManager()
+        self.file_manager = FileManager(base_dir=os.getenv("OUTPUT_DIR"))
         self._load_tasks()
 
     def _load_tasks(self):
@@ -48,7 +49,7 @@ class QueueManager:
                 return json.load(f)
         return {}
 
-    def add_task(self, input_file: str, output_file: str, chunk_size: int = 500, memory_size: int = 0) -> RewriteTask:
+    def add_task(self, input_file: str, output_file: str, chunk_size: int = 800, memory_size: int = 0) -> RewriteTask:
         # Create a directory structure for this task
         task_id, input_file_path, input_file_name = self.file_manager.create_task_directory(input_file)
         
@@ -78,7 +79,23 @@ class QueueManager:
         return next((task for task in self.tasks if task.id == task_id), None)
 
     def get_pending_tasks(self) -> List[RewriteTask]:
-        return [task for task in self.tasks if task.status == TaskStatus.PENDING]
+        """Get all tasks that need processing (pending or interrupted)."""
+        # Get tasks that are pending
+        pending_tasks = [task for task in self.tasks if task.status == TaskStatus.PENDING]
+        
+        # Get tasks that were interrupted during processing
+        interrupted_tasks = [task for task in self.tasks if task.status == TaskStatus.PROCESSING]
+        
+        # Reset interrupted tasks to pending
+        for task in interrupted_tasks:
+            task.status = TaskStatus.PENDING
+            self._save_tasks()
+        
+        return pending_tasks + interrupted_tasks
+    
+    def get_interrupted_tasks(self) -> List[RewriteTask]:
+        """Get tasks that were interrupted during processing."""
+        return [task for task in self.tasks if task.status == TaskStatus.PROCESSING]
 
     def update_task_status(self, task_id: str, status: TaskStatus, error_message: Optional[str] = None):
         task = self.get_task(task_id)

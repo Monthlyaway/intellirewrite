@@ -1,6 +1,6 @@
 test_doc/
 tasks.json
-chapter_data/
+output/
 my_chapter.md
 
 # Byte-compiled / optimized / DLL files

@@ -28,7 +28,7 @@ class RewriteTask(BaseModel):
     qa_pairs: List[QAPair] = []
     total_chunks: int = 0
     processed_chunks: int = 0
-    chunk_size: int = 500  # Default chunk size
+    chunk_size: int = 800  # Default chunk size
     memory_size: int = 0   # Default memory size (0 = no memory)
     mock_response: str = """
 # Rewritten Chapter
