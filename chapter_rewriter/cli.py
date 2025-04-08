@@ -226,13 +226,16 @@ def process_tasks():
                         continue
                     
                     # Get memory context if needed
-                    memory_context = ""
+                    memory_context = []
                     if task.memory_size > 0:
                         # Get previous Q&A pairs for context
                         start_idx = max(0, i - task.memory_size)
                         memory_pairs = task.qa_pairs[start_idx:i]
                         if memory_pairs:
-                            memory_context = "\n\n".join([f"Previous Q&A:\nQ: {qa.question}\nA: {qa.answer}" for qa in memory_pairs])
+                            # Convert Q&A pairs to message format
+                            for qa in memory_pairs:
+                                memory_context.append({"role": "user", "content": qa.question})
+                                memory_context.append({"role": "assistant", "content": qa.answer})
                     
                     try:
                         # Generate response

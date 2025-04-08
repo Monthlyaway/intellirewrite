@@ -1,7 +1,7 @@
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Optional, Tuple, List
 
 # Load environment variables from .env file
 load_dotenv()
@@ -21,26 +21,32 @@ class DeepSeekAPI:
         if not self.model:
             raise ValueError("MODEL_NAME environment variable is not set")
     
-    def generate_response(self, prompt: str, memory_context: str = "", max_tokens: Optional[int] = None) -> Dict[str, Any]:
+    def generate_response(self, prompt: str, memory_context: List[Dict[str, str]] = None, max_tokens: Optional[int] = None) -> Dict[str, Any]:
         """
         Generate a response from the DeepSeek Reasoner model.
         
         Args:
             prompt: The input prompt
-            memory_context: Optional context from previous chunks
+            memory_context: Optional list of previous messages for context
             max_tokens: Maximum number of tokens for the response (overrides environment variable)
             
         Returns:
             Dictionary containing the reasoning_content and content
         """
         try:
-            # Prepare the full prompt with memory context if provided
-            full_prompt = f"Act as a professional technical editor working on a mathematics/physics textbook manuscript. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics if needed. Paragraph: \n\n{prompt}"
+            # Initialize messages with the system prompt
+            messages = [
+                {"role": "system", "content": "Act as a professional technical editor working on a mathematics/physics textbook manuscript. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics if needed."}
+            ]
             
+            # Add memory context if provided
             if memory_context:
-                full_prompt = f"{memory_context}\n\n{full_prompt}"
-                
-            messages = [{"role": "user", "content": full_prompt}]
+                messages.extend(memory_context)
+            
+            # Add the current prompt
+            messages.append({"role": "user", "content": prompt})
+            
+            # Make the API call
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
@@ -55,16 +61,19 @@ class DeepSeekAPI:
             if hasattr(response.choices[0].message, 'reasoning_content'):
                 reasoning_content = response.choices[0].message.reasoning_content
             
+            # Return the response and the assistant's message for memory context
             return {
                 "reasoning_content": reasoning_content,
-                "content": content
+                "content": content,
+                "assistant_message": {"role": "assistant", "content": content}
             }
         except Exception as e:
             print(f"Error calling DeepSeek API: {str(e)}")
             # Return a mock response in case of error
             return {
                 "reasoning_content": f"Error: {str(e)}",
-                "content": "An error occurred while generating the response. Please try again later."
+                "content": "An error occurred while generating the response. Please try again later.",
+                "assistant_message": {"role": "assistant", "content": "An error occurred while generating the response. Please try again later."}
             }
             
     def parse_response(self, response: Dict[str, Any]) -> Tuple[str, Optional[str]]:
