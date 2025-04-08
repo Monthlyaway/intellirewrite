@@ -94,7 +94,6 @@ The following environment variables can be configured in the `.env` file:
 - `DEEPSEEK_BASE_URL`: DeepSeek API base URL
 - `MAX_RETRIES`: Maximum number of API retry attempts
 - `TIMEOUT_SECONDS`: API request timeout in seconds
-- `OUTPUT_DIR`: Directory for output files
 
 Task-specific parameters (chunk_size, memory_size) are stored in the task.json file within each task's directory.
 

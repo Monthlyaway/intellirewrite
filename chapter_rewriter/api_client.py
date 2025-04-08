@@ -10,7 +10,7 @@ class DeepSeekAPI:
     def __init__(self):
         """Initialize the DeepSeek API client."""
         api_key = os.getenv("DEEPSEEK_API_KEY")
-        base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+        base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
         
         if not api_key:
             raise ValueError("DEEPSEEK_API_KEY environment variable is not set")

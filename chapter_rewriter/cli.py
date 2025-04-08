@@ -2,7 +2,7 @@ import typer
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 from .queue_manager import QueueManager
 from .models import TaskStatus, QAPair
 from .text_processor import TextProcessor
@@ -167,18 +167,26 @@ def process_tasks():
             with Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
                 console=console
             ) as progress:
                 task_progress = progress.add_task(
-                    f"Processing chunks for {Path(task.input_file).name}...", 
+                    f"Processing {Path(task.input_file).name} (0/{len(chunks_data)})", 
                     total=len(chunks_data)
                 )
                 
                 # Process each chunk
-                for chunk_data in chunks_data:
-                    i = chunk_data["index"]
+                for i, chunk_data in enumerate(chunks_data):
+                    chunk_index = chunk_data["index"]
                     content = chunk_data["content"]
                     char_count = chunk_data["char_count"]
+                    
+                    # Update progress description with current chunk information
+                    progress.update(
+                        task_progress, 
+                        description=f"Processing {Path(task.input_file).name} (Chunk {i+1}/{len(chunks_data)}, {char_count} chars)"
+                    )
                     
                     # Prepare prompt with memory if enabled
                     prompt = f"Please rewrite the following text in a clear and engaging way, maintaining the original meaning but improving the style and flow:\n\n{content}"
@@ -208,7 +216,7 @@ def process_tasks():
                         question=content,
                         answer=answer,
                         reasoning_content=reasoning_content,
-                        chunk_index=i,
+                        chunk_index=chunk_index,
                         char_count=char_count
                     )
                     
