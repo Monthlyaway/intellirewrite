@@ -13,8 +13,7 @@ class QAPair(BaseModel):
     question: str
     answer: str
     chunk_index: int
-    word_count: int
-    file_path: Optional[str] = None
+    char_count: int
 
 class RewriteTask(BaseModel):
     id: str

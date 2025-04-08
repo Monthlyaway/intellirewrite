@@ -11,21 +11,49 @@ import json
 app = typer.Typer()
 console = Console()
 queue_manager = QueueManager()
-text_processor = TextProcessor(chunk_size=500)  # Default chunk size of 500 words
+text_processor = None  # Initialize as None, will be created with proper chunk size
 
 @app.command()
-def add_task(input_file: str, output_file: str, chunk_size: int = 500):
+def add_task(input_file: str, output_file: str = None, chunk_size: int = 500):
     """Add a new chapter rewriting task to the queue."""
     if not Path(input_file).exists():
         console.print(f"[red]Error: Input file '{input_file}' does not exist.[/red]")
         raise typer.Exit(1)
 
+    # Generate default output file name if not provided
+    if output_file is None:
+        input_path = Path(input_file)
+        output_file = f"rewritten_{input_path.stem}.md"
+        console.print(f"[yellow]No output file specified. Using default: {output_file}[/yellow]")
+
+    # Initialize text processor with the specified chunk size
+    global text_processor
+    text_processor = TextProcessor(chunk_size=chunk_size)
+
     # Process the file to get chunks
     chunks = text_processor.process_file(input_file)
     
+    # Create the task
     task = queue_manager.add_task(input_file, output_file)
     task.total_chunks = len(chunks)
     task.processed_chunks = 0
+    
+    # Store chunks in JSON
+    chunks_data = []
+    for i, chunk in enumerate(chunks):
+        chunks_data.append({
+            "index": i,
+            "content": chunk.content,
+            "start_line": chunk.start_line,
+            "end_line": chunk.end_line,
+            "char_count": chunk.char_count
+        })
+    
+    # Save chunks to a JSON file
+    chunks_file = queue_manager.file_manager.get_chunks_file(task.task_id)
+    with open(chunks_file, 'w', encoding='utf-8') as f:
+        json.dump(chunks_data, f, ensure_ascii=False, indent=2)
+    
     queue_manager._save_tasks()
 
     console.print(f"[green]Task added successfully![/green]")
@@ -35,6 +63,8 @@ def add_task(input_file: str, output_file: str, chunk_size: int = 500):
     console.print(f"Total chunks: {task.total_chunks}")
     console.print(f"Input file: {task.input_file}")
     console.print(f"Output file: {task.output_file}")
+    console.print(f"Chunk size: {chunk_size} characters")
+    console.print(f"Chunks saved to: {chunks_file}")
 
 @app.command()
 def list_tasks():
@@ -76,8 +106,13 @@ def process_tasks():
             # Update task status to processing
             queue_manager.update_task_status(task.id, TaskStatus.PROCESSING)
             
-            # Process the file in chunks
-            chunks = text_processor.process_file(task.input_file)
+            # Load chunks from JSON file
+            chunks_file = queue_manager.file_manager.get_chunks_file(task.task_id)
+            if not Path(chunks_file).exists():
+                raise FileNotFoundError(f"Chunks file not found: {chunks_file}")
+                
+            with open(chunks_file, 'r', encoding='utf-8') as f:
+                chunks_data = json.load(f)
             
             with Progress(
                 SpinnerColumn(),
@@ -86,24 +121,24 @@ def process_tasks():
             ) as progress:
                 task_progress = progress.add_task(
                     f"Processing chunks for {Path(task.input_file).name}...", 
-                    total=len(chunks)
+                    total=len(chunks_data)
                 )
                 
                 # Process each chunk
-                for i, chunk in enumerate(chunks):
+                for chunk_data in chunks_data:
+                    i = chunk_data["index"]
+                    content = chunk_data["content"]
+                    char_count = chunk_data["char_count"]
+                    
                     # In test mode, we use the mock response for each chunk
                     qa_pair = QAPair(
-                        question=chunk.content,
+                        question=content,
                         answer=task.mock_response,  # In real implementation, this would be the API response
                         chunk_index=i,
-                        word_count=chunk.word_count
+                        char_count=char_count
                     )
                     
-                    # Save the Q&A pair to a file using task_id
-                    qa_data = qa_pair.model_dump()
-                    qa_path = queue_manager.file_manager.save_qa_pair(task.task_id, i, qa_data)
-                    qa_pair.file_path = qa_path
-                    
+                    # Add the Q&A pair to the task
                     task.qa_pairs.append(qa_pair)
                     task.processed_chunks += 1
                     progress.update(task_progress, advance=1)
@@ -111,6 +146,13 @@ def process_tasks():
 
             # Write the final output using task_id for the output path
             output_path = queue_manager.file_manager.get_output_path(task.task_id, Path(task.output_file).name)
+            
+            # Save all Q&A pairs to a JSON file
+            qa_json_path = queue_manager.file_manager.get_qa_json_path(task.task_id)
+            with open(qa_json_path, 'w', encoding='utf-8') as f:
+                json.dump([qa.model_dump() for qa in task.qa_pairs], f, ensure_ascii=False, indent=2)
+            
+            # Write the markdown output
             with open(output_path, 'w', encoding='utf-8') as f:
                 for qa in task.qa_pairs:
                     f.write(f"## Original Text (Chunk {qa.chunk_index + 1})\n\n")
@@ -123,6 +165,7 @@ def process_tasks():
             queue_manager.update_task_status(task.id, TaskStatus.COMPLETED)
             console.print(f"[green]Task {task.id} completed successfully![/green]")
             console.print(f"Output saved to: {output_path}")
+            console.print(f"Q&A pairs saved to: {qa_json_path}")
             
         except Exception as e:
             queue_manager.update_task_status(task.id, TaskStatus.FAILED, str(e))
@@ -155,8 +198,7 @@ def show_task(task_id: str):
         console.print(f"\n[bold]Q&A Pairs:[/bold]")
         for i, qa in enumerate(task.qa_pairs):
             console.print(f"\n[bold]Chunk {i+1}:[/bold]")
-            console.print(f"Word Count: {qa.word_count}")
-            console.print(f"File: {qa.file_path}")
+            console.print(f"Character Count: {qa.char_count}")
             
             # Show a preview of the content
             question_preview = qa.question[:100] + "..." if len(qa.question) > 100 else qa.question
@@ -168,14 +210,11 @@ def show_task(task_id: str):
         console.print(f"\n[bold]Directory Structure:[/bold]")
         console.print(f"Base Directory: {task_dir}")
         
-        # List files in each subdirectory
-        for subdir in ["input", "output", "qa_pairs"]:
-            subdir_path = task_dir / subdir
-            if subdir_path.exists():
-                files = list(subdir_path.glob("*"))
-                console.print(f"{subdir}: {len(files)} files")
-                for file in files:
-                    console.print(f"  - {file.name}")
+        # List files in the task directory
+        files = list(task_dir.glob("*"))
+        console.print(f"Files: {len(files)}")
+        for file in files:
+            console.print(f"  - {file.name}")
 
 if __name__ == "__main__":
     app() 

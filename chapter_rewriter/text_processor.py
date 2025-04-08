@@ -1,64 +1,57 @@
 from dataclasses import dataclass
-from typing import List, Tuple
-import re
+from typing import List
 
 @dataclass
 class TextChunk:
     content: str
     start_line: int
     end_line: int
-    word_count: int
+    char_count: int
 
 class TextProcessor:
     def __init__(self, chunk_size: int = 500):
         self.chunk_size = chunk_size
 
-    def _count_words(self, text: str) -> int:
-        # Simple word counting - split by whitespace and count non-empty strings
-        return len([w for w in text.split() if w.strip()])
-
-    def _find_chunk_boundary(self, lines: List[str], target_words: int) -> Tuple[int, int]:
-        """Find the line index where we should end the chunk based on word count."""
-        current_words = 0
-        for i, line in enumerate(lines):
-            line_words = self._count_words(line)
-            if current_words + line_words > target_words:
-                # If this is the first line and it already exceeds target, we need to include it
-                if i == 0:
-                    return 0, 0
-                # Otherwise, return the previous line index
-                return i - 1, current_words
-            current_words += line_words
-        # If we've gone through all lines, return the last line
-        return len(lines) - 1, current_words
-
     def split_into_chunks(self, text: str) -> List[TextChunk]:
-        """Split text into chunks of approximately chunk_size words, respecting paragraph boundaries."""
+        """Split text into chunks of approximately chunk_size characters, respecting paragraph boundaries."""
         lines = text.split('\n')
         chunks = []
         current_line = 0
+        total_lines = len(lines)
 
-        while current_line < len(lines):
-            # Find where this chunk should end
-            end_line, word_count = self._find_chunk_boundary(
-                lines[current_line:], 
-                self.chunk_size
-            )
+        while current_line < total_lines:
+            # Start a new chunk
+            chunk_start_line = current_line
+            current_chars = 0
+            chunk_end_line = current_line
             
-            # Adjust end_line to be relative to the full text
-            end_line += current_line
+            # Process lines until we reach the chunk size
+            while current_line < total_lines:
+                line = lines[current_line]
+                line_chars = len(line)
+                
+                # If adding this line would exceed the chunk size, end the chunk here
+                if current_chars + line_chars > self.chunk_size and current_chars > 0:
+                    break
+                
+                # Add this line to the current chunk
+                current_chars += line_chars
+                chunk_end_line = current_line
+                current_line += 1
             
+            # If we didn't add any lines (empty lines), move to the next line
+            if chunk_end_line < chunk_start_line:
+                current_line += 1
+                continue
+                
             # Create the chunk
-            chunk_content = '\n'.join(lines[current_line:end_line + 1])
+            chunk_content = '\n'.join(lines[chunk_start_line:chunk_end_line + 1])
             chunks.append(TextChunk(
                 content=chunk_content,
-                start_line=current_line,
-                end_line=end_line,
-                word_count=word_count
+                start_line=chunk_start_line,
+                end_line=chunk_end_line,
+                char_count=current_chars
             ))
-            
-            # Move to the next line
-            current_line = end_line + 1
 
         return chunks
 
