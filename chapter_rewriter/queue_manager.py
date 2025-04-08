@@ -79,15 +79,25 @@ class QueueManager:
         return next((task for task in self.tasks if task.id == task_id), None)
 
     def get_pending_tasks(self) -> List[RewriteTask]:
-        """Get all tasks that need processing (pending or interrupted)."""
+        """
+        Get all tasks that need processing (pending or interrupted).
+        
+        This method identifies tasks that are either:
+        1. In PENDING status (never started)
+        2. In PROCESSING status (interrupted during processing)
+        
+        For interrupted tasks, it preserves their processed_chunks count
+        so they can be resumed from where they left off.
+        """
         # Get tasks that are pending
         pending_tasks = [task for task in self.tasks if task.status == TaskStatus.PENDING]
         
         # Get tasks that were interrupted during processing
         interrupted_tasks = [task for task in self.tasks if task.status == TaskStatus.PROCESSING]
         
-        # Reset interrupted tasks to pending
+        # Reset interrupted tasks to pending but preserve their progress
         for task in interrupted_tasks:
+            # We don't reset processed_chunks here, so the task will resume from where it left off
             task.status = TaskStatus.PENDING
             self._save_tasks()
         

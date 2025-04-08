@@ -133,7 +133,7 @@ def process_tasks():
         return
     
     # Check for interrupted tasks
-    interrupted_tasks = [task for task in pending_tasks if task.status == TaskStatus.PROCESSING]
+    interrupted_tasks = [task for task in pending_tasks if task.processed_chunks > 0]
     if interrupted_tasks:
         console.print(f"[yellow]Found {len(interrupted_tasks)} interrupted task(s). Resuming...[/yellow]")
         for task in interrupted_tasks:
@@ -171,6 +171,11 @@ def process_tasks():
                 # Create or clear the output file
                 with open(output_path, 'w', encoding='utf-8') as f:
                     f.write("")  # Clear the file
+            else:
+                # For resumed tasks, ensure the output file exists
+                if not Path(output_path).exists():
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        f.write("")  # Create the file if it doesn't exist
             
             # Display task information
             console.print(f"[bold cyan]Processing Task:[/bold cyan]")

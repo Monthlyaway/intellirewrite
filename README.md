@@ -17,7 +17,7 @@ IntelliRewrite is a powerful command-line tool that helps students, researchers,
 - 📚 Processing large documents in manageable chunks
 - 🌐 Supporting multiple AI providers through configurable endpoints
 
-## ✨ Key Features
+### ✨ Key Features
 
 - **Task Management**: Queue-based system for handling multiple rewriting tasks
 - **Smart Chunking**: Process large documents in manageable pieces
@@ -26,7 +26,7 @@ IntelliRewrite is a powerful command-line tool that helps students, researchers,
 - **Progress Tracking**: Real-time progress updates with detailed information
 - **Resumable Processing**: Continue interrupted tasks without losing progress
 
-## 🎓 Perfect for Students
+### 🎓 Perfect for Students
 
 IntelliRewrite is designed with students in mind:
 
@@ -35,7 +35,7 @@ IntelliRewrite is designed with students in mind:
 - **Research Papers**: Process and improve large academic documents
 - **Language Learning**: See how AI rewrites text to improve your language skills
 
-## 🌍 Global Accessibility
+### 🌍 Global Accessibility
 
 IntelliRewrite is designed to work worldwide:
 
@@ -43,17 +43,12 @@ IntelliRewrite is designed to work worldwide:
 - **International Users**: Use `https://api.siliconflow.cn/v1` for better connectivity
 - **Chinese Users**: Use `https://api.deepseek.com/v1`
 
-## 📚 Supported Formats
 
-- **Markdown**: `.md`
-- **Text**: `.txt`
-
-❌ **PDF**:  `.pdf` (not supported) use [MinerU](https://github.com/opendatalab/MinerU) to extract markdown from PDF
 
 
 ## 🔄 Workflow Overview
 
-## 🎭 Real-World Example
+### 🎭 Real-World Example
 
 Imagine this: Your Linear Algebra professor assigns Chapter 3 & 4 on "Eigenvalues and Eigenvectors" - you know, that chapter where suddenly matrices start having "personalities" and vectors get "special treatment."
 
@@ -117,10 +112,9 @@ You: *stares at textbook* "Wait, how did they jump from step 2 to step 7? Did I 
 Output files are in folder `output`
 
 ### Key Workflow Features
-- **Batch Processing**: Add multiple files before processing
-- **Priority Queue**: Tasks are processed in added order
-- **Progress Saving**: Resume interrupted tasks automatically
-- **Output Structure**: Preserves original document hierarchy
+- **Batch Processing**: Add multiple files before processing (So you can hangout with your buds)
+- **Priority Queue**: Tasks are processed in added order (Make sure your credit is enough)
+- **Progress Saving**: Resume interrupted tasks automatically. Each task has a status: pending, processing, completed, failed. Tasks that are pending and processing will be resumed.
 
 
 
@@ -203,6 +197,13 @@ python -m chapter_rewriter.cli add-task input.md
 # Process all pending tasks
 python -m chapter_rewriter.cli process-tasks
 ```
+
+## 📚 Supported Input File Formats
+
+- **Markdown**: `.md`
+- **Text**: `.txt`
+
+❌ **PDF**:  `.pdf` (not supported) use [MinerU](https://github.com/opendatalab/MinerU) to extract markdown from PDF
 
 ### Advanced Options
 
