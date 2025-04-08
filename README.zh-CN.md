@@ -142,6 +142,8 @@ python -m intelli_rewrite.cli add-task --chunk-size 300 --memory-size 3 input.md
 python -m intelli_rewrite.cli list-tasks
 # 查看任务详情
 python -m intelli_rewrite.cli show-task 任务ID
+# 使用任务ID前6位删除任务
+python -m intelli_rewrite.cli delete-task 123456
 ```
 获取完整帮助：
 ```bash

@@ -35,16 +35,18 @@ class DeepSeekAPI:
         """
         try:
             # Initialize messages with the system prompt
+            system_prompt = "Act as a college professor working on a introductory robotics&deep learning textbook. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics and concepts for your students. Draft: "
             messages = [
-                {"role": "system", "content": "Act as a professional technical editor working on a mathematics/physics textbook manuscript. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics if needed."}
+                {"role": "system", "content": system_prompt}
             ]
             
             # Add memory context if provided
             if memory_context:
                 messages.extend(memory_context)
             
-            # Add the current prompt
-            messages.append({"role": "user", "content": prompt})
+            # Format the prompt with the content
+            formatted_prompt = f"{system_prompt}\n\n{prompt}"
+            messages.append({"role": "user", "content": formatted_prompt})
             
             # Make the API call
             response = self.client.chat.completions.create(

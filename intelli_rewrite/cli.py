@@ -121,6 +121,7 @@ def process_tasks():
         try:
             api_client = DeepSeekAPI()
             console.print("[green]Successfully connected to DeepSeek API[/green]")
+            console.print(f"[green]Using model: {api_client.model}[/green]")
         except Exception as e:
             console.print(f"[red]Error initializing DeepSeek API: {str(e)}[/red]")
             console.print("[yellow]Using mock responses instead[/yellow]")
@@ -348,6 +349,54 @@ def show_task(task_id: str):
         console.print(f"Files: {len(files)}")
         for file in files:
             console.print(f"  - {file.name}")
+
+@app.command()
+def delete_task(task_id_prefix: str):
+    """Delete a task using the first 6 digits of its ID."""
+    # Find tasks that match the prefix
+    matching_tasks = [task for task in queue_manager.tasks if task.id.startswith(task_id_prefix)]
+    
+    if not matching_tasks:
+        console.print(f"[red]No tasks found with ID prefix '{task_id_prefix}'[/red]")
+        return
+    
+    # Display matching tasks
+    table = Table(title=f"Tasks matching ID prefix '{task_id_prefix}'")
+    table.add_column("ID", style="cyan")
+    table.add_column("Status", style="magenta")
+    table.add_column("Input File", style="green")
+    table.add_column("Progress", style="yellow")
+    
+    for task in matching_tasks:
+        progress = f"{task.processed_chunks}/{task.total_chunks}" if task.total_chunks > 0 else "N/A"
+        table.add_row(
+            task.id,
+            task.status.value,
+            Path(task.input_file).name,
+            progress
+        )
+    
+    console.print(table)
+    
+    # Ask for confirmation
+    if typer.confirm(f"Are you sure you want to delete {len(matching_tasks)} task(s)?"):
+        for task in matching_tasks:
+            # Delete the task directory
+            task_dir = Path(queue_manager.file_manager.base_dir) / task.task_id
+            if task_dir.exists():
+                import shutil
+                shutil.rmtree(task_dir)
+                console.print(f"[green]Deleted task directory: {task_dir}[/green]")
+            
+            # Remove the task from the queue
+            queue_manager.tasks.remove(task)
+            console.print(f"[green]Removed task {task.id} from queue[/green]")
+        
+        # Save the updated queue
+        queue_manager._save_tasks()
+        console.print(f"[green]Successfully deleted {len(matching_tasks)} task(s)[/green]")
+    else:
+        console.print("[yellow]Deletion cancelled[/yellow]")
 
 if __name__ == "__main__":
     app() 

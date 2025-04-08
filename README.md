@@ -209,6 +209,9 @@ python -m intelli_rewrite.cli list-tasks
 
 # Show details of a specific task
 python -m intelli_rewrite.cli show-task task_id
+
+# Delete a task using the first 6 digits of its ID
+python -m intelli_rewrite.cli delete-task 123456
 ```
 
 For more details, please refer to the manual page:
