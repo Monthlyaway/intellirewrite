@@ -33,12 +33,12 @@ IntelliRewrite 是一款强大的命令行工具，通过大语言模型帮助�
    使用 [MinerU](https://github.com/opendatalab/MinerU) 将 PDF 转为 Markdown
 2. **队列添加**
    ```bash
-   python -m chapter_rewriter.cli add-task linear_algebra_ch3.md --chunk-size 800
-   python -m chapter_rewriter.cli add-task linear_algebra_ch4.md --chunk-size 800
+   python -m intelli_rewrite.cli add-task linear_algebra_ch3.md --chunk-size 800
+   python -m intelli_rewrite.cli add-task linear_algebra_ch4.md --chunk-size 800
    ```
 3. **通宵处理**
    ```bash
-   python -m chapter_rewriter.cli process-tasks
+   python -m intelli_rewrite.cli process-tasks
    ```
 4. **清晨收获**
    打开 `output/linear_algebra_ch3_rewritten.md` 和 `output/linear_algebra_ch4_rewritten.md`，收获展示完整推导过程、解释特征值现实意义的清晰版本！
@@ -47,13 +47,13 @@ IntelliRewrite 是一款强大的命令行工具，通过大语言模型帮助�
 1. **添加任务**
    将文档加入处理队列：
    ```bash
-   python -m chapter_rewriter.cli add-task document1.md
-   python -m chapter_rewriter.cli add-task document2.txt
+   python -m intelli_rewrite.cli add-task document1.md
+   python -m intelli_rewrite.cli add-task document2.txt
    ```
 2. **查看队列**
    查看待处理任务：
    ```bash
-   python -m chapter_rewriter.cli list-tasks
+   python -m intelli_rewrite.cli list-tasks
    ```
    输出示例：
    ```
@@ -65,7 +65,7 @@ IntelliRewrite 是一款强大的命令行工具，通过大语言模型帮助�
 3. **启动处理**
    开始 AI 重写：
    ```bash
-   python -m chapter_rewriter.cli process-tasks
+   python -m intelli_rewrite.cli process-tasks
    ```
    实时进度：
    ```
@@ -98,9 +98,9 @@ IntelliRewrite 是一款强大的命令行工具，通过大语言模型帮助�
 **配置示例：**
 ```bash
 # 中文主导内容
-python -m chapter_rewriter.cli add-task --chunk-size 600 paper.md
+python -m intelli_rewrite.cli add-task --chunk-size 600 paper.md
 # 英文技术文档
-python -m chapter_rewriter.cli add-task --chunk-size 1500 thesis.txt
+python -m intelli_rewrite.cli add-task --chunk-size 1500 thesis.txt
 ```
 ---
 ## 🛠️ 安装指南
@@ -126,9 +126,9 @@ BASE_URL=API基地址
 ### 基础使用
 ```bash
 # 添加任务到队列
-python -m chapter_rewriter.cli add-task input.md
+python -m intelli_rewrite.cli add-task input.md
 # 处理所有待办任务
-python -m chapter_rewriter.cli process-tasks
+python -m intelli_rewrite.cli process-tasks
 ```
 ## 📚 支持格式
 - **Markdown**：`.md`
@@ -137,19 +137,19 @@ python -m chapter_rewriter.cli process-tasks
 ### 高级选项
 ```bash
 # 自定义分块与记忆窗口
-python -m chapter_rewriter.cli add-task --chunk-size 300 --memory-size 3 input.md
+python -m intelli_rewrite.cli add-task --chunk-size 300 --memory-size 3 input.md
 # 查看任务列表
-python -m chapter_rewriter.cli list-tasks
+python -m intelli_rewrite.cli list-tasks
 # 查看任务详情
-python -m chapter_rewriter.cli show-task 任务ID
+python -m intelli_rewrite.cli show-task 任务ID
 ```
 获取完整帮助：
 ```bash
-python -m chapter_rewriter.cli --help
-python -m chapter_rewriter.cli add-task --help
-python -m chapter_rewriter.cli process-tasks --help
-python -m chapter_rewriter.cli list-tasks --help
-python -m chapter_rewriter.cli show-task --help
+python -m intelli_rewrite.cli --help
+python -m intelli_rewrite.cli add-task --help
+python -m intelli_rewrite.cli process-tasks --help
+python -m intelli_rewrite.cli list-tasks --help
+python -m intelli_rewrite.cli show-task --help
 ```
 ### 清理缓存
 ```bash

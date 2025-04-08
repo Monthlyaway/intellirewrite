@@ -54,14 +54,14 @@ You: *stares at textbook* "Wait, how did they jump from step 2 to step 7? Did I 
 
 2. **Queue It Up**  
    ```bash
-   python -m chapter_rewriter.cli add-task linear_algebra_ch3.md --chunk-size 800
-    python -m chapter_rewriter.cli add-task linear_algebra_ch4.md --chunk-size 800
+   python -m intelli_rewrite.cli add-task linear_algebra_ch3.md --chunk-size 800
+    python -m intelli_rewrite.cli add-task linear_algebra_ch4.md --chunk-size 800
 
    ```
 
 3. **Let AI Work Overnight**  
    ```bash
-   python -m chapter_rewriter.cli process-tasks
+   python -m intelli_rewrite.cli process-tasks
    ```
 
 4. **Next Morning**  
@@ -74,14 +74,14 @@ You: *stares at textbook* "Wait, how did they jump from step 2 to step 7? Did I 
 1. **Add Tasks**  
    Queue documents for processing:
    ```bash
-   python -m chapter_rewriter.cli add-task document1.md
-   python -m chapter_rewriter.cli add-task document2.txt
+   python -m intelli_rewrite.cli add-task document1.md
+   python -m intelli_rewrite.cli add-task document2.txt
    ```
 
 2. **Monitor Queue**  
    View pending tasks:
    ```bash
-   python -m chapter_rewriter.cli list-tasks
+   python -m intelli_rewrite.cli list-tasks
    ```
    Sample Output:
    ```
@@ -94,7 +94,7 @@ You: *stares at textbook* "Wait, how did they jump from step 2 to step 7? Did I 
 3. **Process Tasks**  
    Start AI-powered rewriting:
    ```bash
-   python -m chapter_rewriter.cli process-tasks
+   python -m intelli_rewrite.cli process-tasks
    ```
    Real-time updates:
    ```
@@ -140,10 +140,10 @@ We use character-based chunking to ensure fair calculation across languages:
 **Example Configuration:**
 ```bash
 # Chinese-dominated content
-python -m chapter_rewriter.cli add-task --chunk-size 600 paper.md
+python -m intelli_rewrite.cli add-task --chunk-size 600 paper.md
 
 # English technical document
-python -m chapter_rewriter.cli add-task --chunk-size 1500 thesis.txt
+python -m intelli_rewrite.cli add-task --chunk-size 1500 thesis.txt
 ```
 
 ---
@@ -185,10 +185,10 @@ BASE_URL=base_url_here
 
 ```bash
 # Add a task to the queue
-python -m chapter_rewriter.cli add-task input.md
+python -m intelli_rewrite.cli add-task input.md
 
 # Process all pending tasks
-python -m chapter_rewriter.cli process-tasks
+python -m intelli_rewrite.cli process-tasks
 ```
 
 ## 📚 Supported Input File Formats
@@ -202,23 +202,23 @@ python -m chapter_rewriter.cli process-tasks
 
 ```bash
 # Add a task with custom chunk size and memory context
-python -m chapter_rewriter.cli add-task --chunk-size 300 --memory-size 3 input.md
+python -m intelli_rewrite.cli add-task --chunk-size 300 --memory-size 3 input.md
 
 # List all tasks
-python -m chapter_rewriter.cli list-tasks
+python -m intelli_rewrite.cli list-tasks
 
 # Show details of a specific task
-python -m chapter_rewriter.cli show-task task_id
+python -m intelli_rewrite.cli show-task task_id
 ```
 
 For more details, please refer to the manual page:
 
 ```bash
-python -m chapter_rewriter.cli --help
-python -m chapter_rewriter.cli add-task --help
-python -m chapter_rewriter.cli process-tasks --help
-python -m chapter_rewriter.cli list-tasks --help
-python -m chapter_rewriter.cli show-task --help
+python -m intelli_rewrite.cli --help
+python -m intelli_rewrite.cli add-task --help
+python -m intelli_rewrite.cli process-tasks --help
+python -m intelli_rewrite.cli list-tasks --help
+python -m intelli_rewrite.cli show-task --help
 ```
 
 ### Cleaning 
