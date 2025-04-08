@@ -18,7 +18,7 @@ class DeepSeekAPI:
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = "deepseek-ai/DeepSeek-V2.5"
     
-    def generate_response(self, prompt: str, max_tokens: int = 4000) -> Dict[str, Any]:
+    def generate_response(self, prompt: str, max_tokens: int = 8192) -> Dict[str, Any]:
         """
         Generate a response from the DeepSeek Reasoner model.
         
