@@ -1,7 +1,7 @@
 from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict
 
 class TaskStatus(str, Enum):
     PENDING = "pending"
@@ -9,14 +9,25 @@ class TaskStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+class QAPair(BaseModel):
+    question: str
+    answer: str
+    chunk_index: int
+    word_count: int
+    file_path: Optional[str] = None
+
 class RewriteTask(BaseModel):
     id: str
+    task_id: str  # Directory ID for file organization
     input_file: str
     output_file: str
     status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = datetime.now()
     completed_at: Optional[datetime] = None
     error_message: Optional[str] = None
+    qa_pairs: List[QAPair] = []
+    total_chunks: int = 0
+    processed_chunks: int = 0
     mock_response: str = """
 # Rewritten Chapter
 
