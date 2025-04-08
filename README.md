@@ -1,10 +1,7 @@
 
 # 📚 IntelliRewrite: AI-Powered Text Rewriter
 
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/Monthlyaway/intellirewrite.svg)](https://github.com/Monthlyaway/intellirewrite/stargazers)
-[![Issues](https://img.shields.io/github/issues/Monthlyaway/intellirewrite.svg)](https://github.com/Monthlyaway/intellirewrite/issues)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Stars](https://img.shields.io/github/stars/Monthlyaway/intellirewrite.svg)](https://github.com/Monthlyaway/intellirewrite/stargazers) [![Issues](https://img.shields.io/github/issues/Monthlyaway/intellirewrite.svg)](https://github.com/Monthlyaway/intellirewrite/issues)
 
 [toc]
 
@@ -21,8 +18,8 @@ IntelliRewrite is a powerful command-line tool that helps students, researchers,
 
 - **Task Management**: Queue-based system for handling multiple rewriting tasks
 - **Smart Chunking**: Process large documents in manageable pieces
-- **Flexible API Support**: Works with OpenAI APIs
 - **Memory Context**: Maintain consistency across chunks with configurable memory
+- **Flexible API Support**: Works with OpenAI APIs
 - **Progress Tracking**: Real-time progress updates with detailed information
 - **Resumable Processing**: Continue interrupted tasks without losing progress
 
@@ -35,15 +32,12 @@ IntelliRewrite is designed with students in mind:
 - **Research Papers**: Process and improve large academic documents
 - **Language Learning**: See how AI rewrites text to improve your language skills
 
-### 🌍 Global Accessibility
+### 🌍 API Flexibility
 
-IntelliRewrite is designed to work worldwide:
+IntelliRewrite supports any OpenAI-compatible API endpoint:
 
-- **Multiple API Endpoints**: Configure different base URLs for regional access
-- **International Users**: Use `https://api.siliconflow.cn/v1` for better connectivity
-- **Chinese Users**: Use `https://api.deepseek.com/v1`
-
-
+- **Custom Endpoints**: Configure your preferred API base URL
+- **Multi-model Support**: Works with OpenAI, DeepSeek, and other compatible services. Deepseek-R1 has reasoning ability I heard? Sure! IntelliRewrite works just fine.
 
 
 ## 🔄 Workflow Overview
@@ -183,7 +177,7 @@ Edit the `.env` file with your API key and preferred settings:
 
 ```
 API_KEY=your_api_key_here
-BASE_URL=https://api.deepseek.com  # Change to https://api.siliconflow.cn/v1 if needed
+BASE_URL=base_url_here
 ```
 
 ## 📖 Usage
@@ -244,7 +238,7 @@ python -m chapter_rewriter.cli show-task --help
 
 - `API_KEY`: Your API key
 - `BASE_URL`: API base URL (change for regional access)
-- `MAX_TOKENS`: Restrict the length of model's response, default: 4096
+- `MAX_TOKENS`: Restrict the length of model's response, default: 4096. Expand to 8192 if using Deepseek-R1.
 
 ### Task-Specific Settings
 
