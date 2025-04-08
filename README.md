@@ -1,9 +1,8 @@
-
 # 📚 IntelliRewrite: AI-Powered Text Rewriter
 
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/) [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE) [![Stars](https://img.shields.io/github/stars/Monthlyaway/intellirewrite.svg)](https://github.com/Monthlyaway/intellirewrite/stargazers) [![Issues](https://img.shields.io/github/issues/Monthlyaway/intellirewrite.svg)](https://github.com/Monthlyaway/intellirewrite/issues)
 
-[toc]
+[English](README.md) | [中文](README.zh-CN.md)
 
 ## 🚀 What is IntelliRewrite?
 
