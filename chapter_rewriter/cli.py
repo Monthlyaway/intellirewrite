@@ -125,6 +125,7 @@ def process_tasks():
             console.print(f"[red]Error initializing DeepSeek API: {str(e)}[/red]")
             console.print("[yellow]Using mock responses instead[/yellow]")
             api_client = None
+            return
     
     # Get pending tasks
     pending_tasks = queue_manager.get_pending_tasks()
@@ -151,9 +152,11 @@ def process_tasks():
             # Load chunks
             with open(chunks_file, 'r', encoding='utf-8') as f:
                 chunks_data = json.load(f)
+                
+            # Update total chunks count
+            task.total_chunks = len(chunks_data)
             
             # Load existing Q&A pairs if any
-            existing_qa_pairs = []
             if Path(qa_json_path).exists():
                 with open(qa_json_path, 'r', encoding='utf-8') as f:
                     existing_qa_pairs = json.load(f)
@@ -183,7 +186,7 @@ def process_tasks():
             console.print(f"Directory ID: {task.task_id}")
             console.print(f"Input File: {Path(task.input_file).name}")
             console.print(f"Output File: {Path(task.output_file).name}")
-            console.print(f"Total Chunks: {len(chunks_data)}")
+            console.print(f"Total Chunks: {task.total_chunks}")
             console.print(f"Processed Chunks: {task.processed_chunks}")
             console.print(f"Memory Size: {task.memory_size}")
             console.print(f"Output Path: {output_path}")
@@ -200,8 +203,8 @@ def process_tasks():
                 console=console
             ) as progress:
                 task_progress = progress.add_task(
-                    f"Processing {Path(task.input_file).name} ({task.processed_chunks}/{len(chunks_data)})", 
-                    total=len(chunks_data),
+                    f"Processing {Path(task.input_file).name} ({task.processed_chunks}/{task.total_chunks})", 
+                    total=task.total_chunks,
                     completed=task.processed_chunks
                 )
                 
@@ -214,7 +217,7 @@ def process_tasks():
                     # Update progress description with current chunk information
                     progress.update(
                         task_progress, 
-                        description=f"Task {task.id} - Chunk {i+1}/{len(chunks_data)} ({char_count} chars)"
+                        description=f"Task {task.id} - Chunk {i+1}/{task.total_chunks} ({char_count} chars)"
                     )
                     
                     # Skip if this chunk was already processed
@@ -235,14 +238,15 @@ def process_tasks():
                         # Generate response
                         response = api_client.generate_response(content, memory_context)
                         
-                        # Parse response
-                        answer, reasoning_content = api_client.parse_response(response)
+                        # Get the content and reasoning from the response
+                        content = response.get("content", "")
+                        reasoning = response.get("reasoning_content")
                         
                         # Create Q&A pair
                         qa_pair = QAPair(
                             question=content,
-                            answer=answer,
-                            reasoning_content=reasoning_content,
+                            answer=content,
+                            reasoning_content=reasoning,
                             chunk_index=chunk_index,
                             char_count=char_count
                         )
@@ -257,7 +261,7 @@ def process_tasks():
                         
                         # Append the rewritten content to the output file in real-time
                         with open(output_path, 'a', encoding='utf-8') as f:
-                            f.write(qa_pair.answer)
+                            f.write(content)
                             f.write("\n\n")
                     except Exception as e:
                         console.print(f"[red]Error processing chunk {i+1}: {str(e)}[/red]")

@@ -17,7 +17,9 @@ class DeepSeekAPI:
             raise ValueError("API_KEY environment variable is not set")
         
         self.client = OpenAI(api_key=api_key, base_url=base_url)
-        self.model = "deepseek-ai/DeepSeek-V2.5"
+        self.model = os.getenv("MODEL_NAME")
+        if not self.model:
+            raise ValueError("MODEL_NAME environment variable is not set")
     
     def generate_response(self, prompt: str, memory_context: str = "", max_tokens: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -33,7 +35,7 @@ class DeepSeekAPI:
         """
         try:
             # Prepare the full prompt with memory context if provided
-            full_prompt = f"Please rewrite the following text in a clear and engaging way, maintaining the original meaning but improving the style and flow:\n\n{prompt}"
+            full_prompt = f"Act as a professional technical editor working on a mathematics/physics textbook manuscript. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics if needed. Paragraph: \n\n{prompt}"
             
             if memory_context:
                 full_prompt = f"{memory_context}\n\n{full_prompt}"
