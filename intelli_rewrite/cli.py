@@ -243,13 +243,14 @@ def process_tasks():
                         response = api_client.generate_response(content, memory_context)
                         
                         # Get the content and reasoning from the response
-                        content = response.get("content", "")
+                        answer = response.get("content", "")
                         reasoning = response.get("reasoning_content")
                         
-                        # Create Q&A pair
+                        # Create Q&A pair with the formatted prompt as question
+                        formatted_prompt = f"Act as a professional technical editor working on a mathematics/physics textbook manuscript. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics if needed.\n\n{content}"
                         qa_pair = QAPair(
-                            question=content,
-                            answer=content,
+                            question=formatted_prompt,
+                            answer=answer,
                             reasoning_content=reasoning,
                             chunk_index=chunk_index,
                             char_count=char_count
@@ -265,7 +266,7 @@ def process_tasks():
                         
                         # Append the rewritten content to the output file in real-time
                         with open(output_path, 'a', encoding='utf-8') as f:
-                            f.write(content)
+                            f.write(answer)
                             f.write("\n\n")
                     except Exception as e:
                         console.print(f"[red]Error processing chunk {i+1}: {str(e)}[/red]")
