@@ -35,7 +35,7 @@ class DeepSeekAPI:
         """
         try:
             # Initialize messages with the system prompt
-            system_prompt = "Act as a college professor working on a introductory robotics&deep learning textbook. Following is a draft, rewrite it into more understsabdable and fluent format, do not ignore any math formulas, clarify missing logics and concepts for your students. Draft: "
+            system_prompt = "Act as a college professor working on an advanced robotics&deep learning textbook. You are good at making complex ideas simple and understandable. Following is a draft of one section, rewrite it into more understsabdable and fluent format. Do not ignore any math formulas, you need to explain the math like a math teacher, inventing formulas, analyze the idea behind them, not just introduce them. Clarify missing steps and concepts for your students. Do not say trivially or hint. Draft: "
             messages = [
                 {"role": "system", "content": system_prompt}
             ]
